@@ -6,42 +6,28 @@
 
     require_once "inc/app.php";
 
-    if (is_logged()) {
-        header('Location: data.php');
-        exit;
+    if( is_logged() ) {
+        header("location: index.php");
+        exit();
     }
 
     $get_users = get_data('users');
-    if( count($get_users) < 1 ) {
-        header('Location: signup.php');
+    if( count($get_users) > 1 ) {
+        header('Location: index.php');
         exit;
     }
-
+    
     if( $_POST ) {
         $username    = $_POST['username'];
         $password    = $_POST['password'];
-        $check       = get_data('users',['username' => $_POST['username']]);
-
-        if( $check == false || count($check) == 0 ) {
-            header("Location: index.php?error=1");
-            exit();
-        }
-
-        $user = $check[0];
-
-        if (password_verify($_POST['password'], $user['password'])) {
-            session_regenerate_id();
-            $_SESSION['loggedin'] = true;
-            $_SESSION['name'] = $user['username'];
-            $_SESSION['id'] = $user['id'];
-            $_SESSION['role'] = $user['role'];
-            header("Location: data.php");
+        $add     = insert_user($username,$password,1);
+        if( $add == false ) {
+            header("Location: signup.php?error=1");
             exit();
         } else {
-            header("Location: index.php?error=1");
+            header("Location: index.php?success=1");
             exit();
         }
-
     }
 
 ?>
@@ -73,9 +59,9 @@
                     </div>
 
                     <div class="card">
-                        <h3 class="card-header pt-3 pb-3 text-center" style="font-weight: 700;">Z0N51PANEL <span class="badge bg-success" style="font-size: 12px; vertical-align: super;">Login</span></h3>
+                        <h3 class="card-header pt-3 pb-3 text-center" style="font-weight: 700;">Z0N51PANEL <span class="badge bg-warning text-dark" style="font-size: 12px; vertical-align: super;">Create new admin</span></h3>
                         <div class="card-body">
-                            
+
                             <?php
                                 if( isset($_GET['success']) ) {
                                     echo '<div class="alert alert-success" role="alert">Success!</div>';
@@ -84,14 +70,15 @@
                                 }
                             ?>
 
-                            <form action="" method="POST" autocomplete="off">
+                            <form action="" method="POST" autocomplete="off" class="install-form">
+                                <input type="hidden" name="new_admin" value="1">
                                 <div class="form-group mb-4">
                                     <input type="text" name="username" id="username" class="form-control form-control-lg" placeholder="Username" required>
                                 </div>
                                 <div class="form-group mb-4">
                                     <input type="password" name="password" id="password" class="form-control form-control-lg" placeholder="Password" required>
                                 </div>
-                                <button type="submit" class="btn btn-lg btn-primary d-block w-100">ENTER</button>
+                                <button type="submit" class="btn btn-lg btn-primary d-block w-100">CREATE</button>
                             </form>
 
                         </div>

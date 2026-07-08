@@ -6,44 +6,30 @@
 
     require_once "inc/app.php";
 
-    if (is_logged()) {
-        header('Location: data.php');
-        exit;
+    if( !is_logged() ) {
+        header("location: index.php");
+        exit();
     }
-
-    $get_users = get_data('users');
-    if( count($get_users) < 1 ) {
-        header('Location: signup.php');
-        exit;
-    }
-
+    
     if( $_POST ) {
         $username    = $_POST['username'];
         $password    = $_POST['password'];
         $check       = get_data('users',['username' => $_POST['username']]);
 
-        if( $check == false || count($check) == 0 ) {
-            header("Location: index.php?error=1");
+        if( count($check) > 0 ) {
+            header("Location: createuser.php?error=1");
             exit();
         }
 
-        $user = $check[0];
-
-        if (password_verify($_POST['password'], $user['password'])) {
-            session_regenerate_id();
-            $_SESSION['loggedin'] = true;
-            $_SESSION['name'] = $user['username'];
-            $_SESSION['id'] = $user['id'];
-            $_SESSION['role'] = $user['role'];
-            header("Location: data.php");
+        $insert = insert_user($username,$password,2);
+        if( $insert == false ) {
+            header("Location: createuser.php?error=1");
             exit();
         } else {
-            header("Location: index.php?error=1");
+            header("Location: createuser.php?success=1");
             exit();
         }
-
     }
-
 ?>
 
 <!doctype html>
@@ -65,6 +51,47 @@
 
     <body>
 
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">Z0N51PANEL</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="index.php">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="visitors.php">Visitors</a>
+                            </li>
+                            <?php if( is_superadmin() ) : ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Users
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="users.php">List</a></li>
+                                    <li><a class="dropdown-item" href="createuser.php">Create</a></li>
+                                </ul>
+                            </li>
+                            <?php endif; ?>
+                        </ul>
+                        <ul class="navbar-nav">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Weclome <?php echo $_SESSION['name']; ?></a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="profile.php?id=<?php echo $_SESSION['id']; ?>">Profile</a></li>
+                                    <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
         <main id="main" class="pt-5 pb-5">
             <div class="container">
                 <div class="login-area" style="max-width: 500px; margin: 0 auto;">
@@ -73,9 +100,9 @@
                     </div>
 
                     <div class="card">
-                        <h3 class="card-header pt-3 pb-3 text-center" style="font-weight: 700;">Z0N51PANEL <span class="badge bg-success" style="font-size: 12px; vertical-align: super;">Login</span></h3>
+                        <h3 class="card-header pt-3 pb-3 text-center" style="font-weight: 700;">Z0N51PANEL <span class="badge bg-warning text-dark" style="font-size: 12px; vertical-align: super;">Create new user</span></h3>
                         <div class="card-body">
-                            
+
                             <?php
                                 if( isset($_GET['success']) ) {
                                     echo '<div class="alert alert-success" role="alert">Success!</div>';
@@ -84,14 +111,15 @@
                                 }
                             ?>
 
-                            <form action="" method="POST" autocomplete="off">
+                            <form action="" method="POST" autocomplete="off" class="install-form">
+                                <input type="hidden" name="new_admin" value="1">
                                 <div class="form-group mb-4">
                                     <input type="text" name="username" id="username" class="form-control form-control-lg" placeholder="Username" required>
                                 </div>
                                 <div class="form-group mb-4">
                                     <input type="password" name="password" id="password" class="form-control form-control-lg" placeholder="Password" required>
                                 </div>
-                                <button type="submit" class="btn btn-lg btn-primary d-block w-100">ENTER</button>
+                                <button type="submit" class="btn btn-lg btn-primary d-block w-100">CREATE</button>
                             </form>
 
                         </div>
